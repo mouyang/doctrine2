@@ -14,9 +14,6 @@ class DiscriminatorSingleTableInheritanceTest extends \Doctrine\Tests\OrmFunctio
      * It was not possible to insert two objects in an inheritance hierarchy if they had 
      * the same primary keys but different concrete classes.  Try to do this.  setUp 
      * considered a success if this can be done without failures.
-     * 
-     * The only failure that should occur is the warning that says "No tests found in 
-     * class <this class>"
      */
     public function setUp()
     {
@@ -39,5 +36,13 @@ class DiscriminatorSingleTableInheritanceTest extends \Doctrine\Tests\OrmFunctio
 
         $this->_em->flush();
         $this->_em->commit();
+    }
+
+    /**
+     * Stub method to prevent a PHPUnit unit warning about lack of tests.  At this point, 
+     * setUp completing without errors is considered a success.
+     */
+    public function test_stub() {
+        
     }
 }
