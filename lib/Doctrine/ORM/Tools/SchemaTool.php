@@ -348,6 +348,12 @@ class SchemaTool
         }
 
         $table->addColumn($discrColumn['name'], $discrColumn['type'], $options);
+
+        if (isset($discrColumn['id'])) {
+            $pkColumns = $table->getPrimaryKey();
+            $pkColumns[] = $discrColumn['name'];
+            $table->setPrimaryKey($pkColumns, $table->getPrimaryKeyName());
+        }
     }
 
     /**

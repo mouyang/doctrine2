@@ -183,6 +183,9 @@ abstract class OrmFunctionalTestCase extends OrmTestCase
             'Doctrine\Tests\Models\Cache\AttractionContactInfo',
             'Doctrine\Tests\Models\Cache\AttractionLocationInfo'
         ),
+        'discriminatorSingleTableInheritance' => array(
+            'Doctrine\Tests\Models\Discriminator\SingleTableInheritance\AbstractAttribute',
+        ),
     );
 
     /**
@@ -332,6 +335,10 @@ abstract class OrmFunctionalTestCase extends OrmTestCase
             $conn->executeUpdate('DELETE FROM cache_city');
             $conn->executeUpdate('DELETE FROM cache_state');
             $conn->executeUpdate('DELETE FROM cache_country');
+        }
+
+        if (isset($this->_usedModelSets['discriminatorSingleTableInheritance'])) {
+            $conn->executeUpdate('DELETE FROM AbstractAttribute');
         }
 
         $this->_em->clear();
