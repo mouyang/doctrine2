@@ -399,7 +399,7 @@ use Doctrine\Common\Util\ClassUtils;
         $unitOfWork = $this->getUnitOfWork();
 
         // Check identity map first
-        if (($entity = $unitOfWork->tryGetById($sortedId, $class->rootEntityName)) !== false) {
+        if (($entity = $unitOfWork->tryGetById($sortedId, $class->name)) !== false) {
             if ( ! ($entity instanceof $class->name)) {
                 return null;
             }

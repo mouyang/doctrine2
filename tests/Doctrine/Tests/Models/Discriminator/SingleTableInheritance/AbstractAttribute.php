@@ -4,7 +4,7 @@ namespace Doctrine\Tests\Models\Discriminator\SingleTableInheritance;
 /**
  * @Entity
  * @InheritanceType("SINGLE_TABLE")
- * @DiscriminatorColumn(name="type", type="string", id=true)
+ * @DiscriminatorColumn(name="type", type="string")
  * @DiscriminatorMap({"task" = "TaskAttribute", "user" = "UserAttribute"})
  */
 class AbstractAttribute

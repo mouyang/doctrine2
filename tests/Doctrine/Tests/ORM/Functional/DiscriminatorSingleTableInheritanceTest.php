@@ -38,11 +38,21 @@ class DiscriminatorSingleTableInheritanceTest extends \Doctrine\Tests\OrmFunctio
         $this->_em->commit();
     }
 
-    /**
-     * Stub method to prevent a PHPUnit unit warning about lack of tests.  At this point, 
-     * setUp completing without errors is considered a success.
-     */
-    public function test_stub() {
-        
+    public function test_getTaskAttribute() {
+        $class = "Doctrine\Tests\Models\Discriminator\SingleTableInheritance\TaskAttribute";
+        $attribute = $this->_em->find($class, array(
+            "id" => 1, "name" => "description"
+        ));
+        $this->assertEquals($class, get_class($attribute));
+        $this->assertEquals($attribute->value_text, "catchy description for a task");
+    }
+
+    public function test_getUserAttribute() {
+        $class = "Doctrine\Tests\Models\Discriminator\SingleTableInheritance\UserAttribute";
+        $attribute = $this->_em->find($class, array(
+            "id" => 1, "name" => "description"
+        ));
+        $this->assertEquals($class, get_class($attribute));
+        $this->assertEquals($attribute->value_text, "catchy description for a user");
     }
 }

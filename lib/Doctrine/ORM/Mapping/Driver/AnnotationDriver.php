@@ -224,7 +224,6 @@ class AnnotationDriver extends AbstractAnnotationDriver
                         'type' => $discrColumnAnnot->type,
                         'length' => $discrColumnAnnot->length,
                         'columnDefinition'    => $discrColumnAnnot->columnDefinition,
-                        'id' => $discrColumnAnnot->id
                     ));
                 } else {
                     $metadata->setDiscriminatorColumn(array('name' => 'dtype', 'type' => 'string', 'length' => 255));

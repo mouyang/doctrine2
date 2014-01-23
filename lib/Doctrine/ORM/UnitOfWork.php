@@ -1107,30 +1107,35 @@ class UnitOfWork implements PropertyChangedListener
                 }
 
                 $targetClass = $this->em->getClassMetadata($assoc['targetEntity']);
-
-                if ( ! $calc->hasClass($targetClass->name)) {
-                    $calc->addClass($targetClass);
-
-                    $newNodes[] = $targetClass;
-                }
-
-                $calc->addDependency($targetClass, $class);
-
-                // If the target class has mapped subclasses, these share the same dependency.
-                if ( ! $targetClass->subClasses) {
-                    continue;
-                }
-
-                foreach ($targetClass->subClasses as $subClassName) {
-                    $targetSubClass = $this->em->getClassMetadata($subClassName);
-
-                    if ( ! $calc->hasClass($subClassName)) {
-                        $calc->addClass($targetSubClass);
-
-                        $newNodes[] = $targetSubClass;
+                if (is_a($class->name, $targetClass->name, true)) {
+                    // If the target class has mapped subclasses, these share the same dependency.
+                    if ( ! $targetClass->subClasses) {
+                        continue;
                     }
 
-                    $calc->addDependency($targetSubClass, $class);
+                    foreach ($targetClass->subClasses as $subClassName) {
+                        $targetSubClass = $this->em->getClassMetadata($subClassName);
+
+                        if ( ! $calc->hasClass($subClassName)) {
+                            $calc->addClass($targetSubClass);
+
+                            $newNodes[] = $targetSubClass;
+                        }
+
+                        $calc->addDependency($targetClass, $targetSubClass);
+                    }
+
+                    if ($class->name !== $targetClass->name) {
+                        $calc->addClass($targetClass);
+                        $newNodes[] = $targetClass;
+                    }
+                } else {
+                    if ( ! $calc->hasClass($targetClass->name)) {
+                        $calc->addClass($targetClass);
+                        $newNodes[] = $targetClass;
+                    }
+
+                    $calc->addDependency($targetClass, $this->em->getClassMetadata($class->rootEntityName));
                 }
             }
         }
@@ -1364,7 +1369,7 @@ class UnitOfWork implements PropertyChangedListener
             throw ORMInvalidArgumentException::entityWithoutIdentity($classMetadata->name, $entity);
         }
 
-        $className = $classMetadata->rootEntityName;
+        $className = $classMetadata->name;
 
         if (isset($this->identityMap[$className][$idHash])) {
             return false;
@@ -1479,7 +1484,7 @@ class UnitOfWork implements PropertyChangedListener
             throw ORMInvalidArgumentException::entityHasNoIdentity($entity, "remove from identity map");
         }
 
-        $className = $classMetadata->rootEntityName;
+        $className = $classMetadata->name;
 
         if (isset($this->identityMap[$className][$idHash])) {
             unset($this->identityMap[$className][$idHash]);
@@ -1552,7 +1557,7 @@ class UnitOfWork implements PropertyChangedListener
             return false;
         }
 
-        return isset($this->identityMap[$classMetadata->rootEntityName][$idHash]);
+        return isset($this->identityMap[$classMetadata->name][$idHash]);
     }
 
     /**
@@ -2505,8 +2510,14 @@ class UnitOfWork implements PropertyChangedListener
             $id = array($class->identifier[0] => $idHash);
         }
 
-        if (isset($this->identityMap[$class->rootEntityName][$idHash])) {
-            $entity = $this->identityMap[$class->rootEntityName][$idHash];
+        if (($class->isInheritanceTypeSingleTable() && isset($this->identityMap[$className][$idHash])) || 
+            (!$class->isInheritanceTypeSingleTable() && isset($this->identityMap[$class->rootEntityName][$idHash]))
+        ) {
+            if ($class->isInheritanceTypeSingleTable()) {
+                $entity = $this->identityMap[$className][$idHash];
+            } else if (!$class->isInheritanceTypeSingleTable()) {
+                $entity = $this->identityMap[$class->rootEntityName][$idHash];
+            }
             $oid = spl_object_hash($entity);
 
             if (
@@ -2566,7 +2577,11 @@ class UnitOfWork implements PropertyChangedListener
             $this->entityStates[$oid]       = self::STATE_MANAGED;
             $this->originalEntityData[$oid] = $data;
 
-            $this->identityMap[$class->rootEntityName][$idHash] = $entity;
+            if ($class->isInheritanceTypeSingleTable()) {
+                $this->identityMap[$className][$idHash] = $entity;
+            } else if (!$class->isInheritanceTypeSingleTable()) {
+                $this->identityMap[$class->rootEntityName][$idHash] = $entity;
+            }
 
             if ($entity instanceof NotifyPropertyChanged) {
                 $entity->addPropertyChangedListener($this);

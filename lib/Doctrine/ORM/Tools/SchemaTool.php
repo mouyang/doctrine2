@@ -258,6 +258,9 @@ class SchemaTool
                     }
                 }
             }
+            if ($class->isInheritanceTypeSingleTable()) {
+                $pkColumns[] = $class->discriminatorColumn['name'];
+            }
 
             if ( ! $table->hasIndex('primary')) {
                 $table->setPrimaryKey($pkColumns);
@@ -348,12 +351,6 @@ class SchemaTool
         }
 
         $table->addColumn($discrColumn['name'], $discrColumn['type'], $options);
-
-        if (isset($discrColumn['id'])) {
-            $pkColumns = $table->getPrimaryKey();
-            $pkColumns[] = $discrColumn['name'];
-            $table->setPrimaryKey($pkColumns, $table->getPrimaryKeyName());
-        }
     }
 
     /**

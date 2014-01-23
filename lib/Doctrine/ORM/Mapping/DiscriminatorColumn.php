@@ -51,11 +51,4 @@ final class DiscriminatorColumn implements Annotation
      * @var string
      */
     public $columnDefinition;
-
-    /**
-     * Whether or not to include in the discriminator field in the entity primary key.
-     * 
-     * @var boolean
-     */
-    public $id = false;
 }
