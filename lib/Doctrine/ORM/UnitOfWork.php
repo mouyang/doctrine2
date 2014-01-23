@@ -1102,31 +1102,8 @@ class UnitOfWork implements PropertyChangedListener
 
         // Calculate dependencies for new nodes
         while ($class = array_pop($newNodes)) {
-            // TODO copy-pasted from below. refactor so duplication is not there.
             if ($class->name !== $class->rootEntityName) {
-                $targetClass = $this->em->getClassMetadata($class->rootEntityName);
-
-                // If the target class has mapped subclasses, these share the same dependency.
-                if ( ! $targetClass->subClasses) {
-                    continue;
-                }
-
-                foreach ($targetClass->subClasses as $subClassName) {
-                    $targetSubClass = $this->em->getClassMetadata($subClassName);
-
-                    if ( ! $calc->hasClass($subClassName)) {
-                        $calc->addClass($targetSubClass);
-
-                        $newNodes[] = $targetSubClass;
-                    }
-
-                    $calc->addDependency($targetClass, $targetSubClass);
-                }
-
-                if ($class->name !== $targetClass->name) {
-                    $calc->addClass($targetClass);
-                    $newNodes[] = $targetClass;
-                }
+                $this->addSubclassDependencies($this->em->getClassMetadata($class->rootEntityName), $class, $calc, $newNodes);
             }
 
             foreach ($class->associationMappings as $assoc) {
@@ -1136,27 +1113,7 @@ class UnitOfWork implements PropertyChangedListener
 
                 $targetClass = $this->em->getClassMetadata($assoc['targetEntity']);
                 if (is_a($class->name, $targetClass->name, true)) {
-                    // If the target class has mapped subclasses, these share the same dependency.
-                    if ( ! $targetClass->subClasses) {
-                        continue;
-                    }
-
-                    foreach ($targetClass->subClasses as $subClassName) {
-                        $targetSubClass = $this->em->getClassMetadata($subClassName);
-
-                        if ( ! $calc->hasClass($subClassName)) {
-                            $calc->addClass($targetSubClass);
-
-                            $newNodes[] = $targetSubClass;
-                        }
-
-                        $calc->addDependency($targetClass, $targetSubClass);
-                    }
-
-                    if ($class->name !== $targetClass->name) {
-                        $calc->addClass($targetClass);
-                        $newNodes[] = $targetClass;
-                    }
+                    $this->addSubclassDependencies($targetClass, $class, $calc, $newNodes);
                 } else {
                     if ( ! $calc->hasClass($targetClass->name)) {
                         $calc->addClass($targetClass);
@@ -1169,6 +1126,25 @@ class UnitOfWork implements PropertyChangedListener
         }
 
         return $calc->getCommitOrder();
+    }
+
+    private function addSubclassDependencies($targetClass, $class, Internal\CommitOrderCalculator &$calc, array &$newNodes) {
+        if (!$targetClass->subClasses) {
+            return;
+        }
+        foreach ($targetClass->subClasses as $subClassName) {
+            $targetSubClass = $this->em->getClassMetadata($subClassName);
+            if ( ! $calc->hasClass($subClassName)) {
+                $calc->addClass($targetSubClass);
+                $newNodes[] = $targetSubClass;
+            }
+            $calc->addDependency($targetClass, $targetSubClass);
+        }
+
+        if ($class->name !== $targetClass->name) {
+            $calc->addClass($targetClass);
+            $newNodes[] = $targetClass;
+        }
     }
 
     /**
