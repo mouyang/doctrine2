@@ -1088,7 +1088,8 @@ class UnitOfWork implements PropertyChangedListener
         $newNodes = array();
 
         foreach ($entityChangeSet as $entity) {
-            $class = $this->em->getClassMetadata(get_class($entity));
+            $entityClass = get_class($entity);
+            $class = $this->em->getClassMetadata($entityClass);
 
             if ($calc->hasClass($class->name)) {
                 continue;
@@ -1101,6 +1102,33 @@ class UnitOfWork implements PropertyChangedListener
 
         // Calculate dependencies for new nodes
         while ($class = array_pop($newNodes)) {
+            // TODO copy-pasted from below. refactor so duplication is not there.
+            if ($class->name !== $class->rootEntityName) {
+                $targetClass = $this->em->getClassMetadata($class->rootEntityName);
+
+                // If the target class has mapped subclasses, these share the same dependency.
+                if ( ! $targetClass->subClasses) {
+                    continue;
+                }
+
+                foreach ($targetClass->subClasses as $subClassName) {
+                    $targetSubClass = $this->em->getClassMetadata($subClassName);
+
+                    if ( ! $calc->hasClass($subClassName)) {
+                        $calc->addClass($targetSubClass);
+
+                        $newNodes[] = $targetSubClass;
+                    }
+
+                    $calc->addDependency($targetClass, $targetSubClass);
+                }
+
+                if ($class->name !== $targetClass->name) {
+                    $calc->addClass($targetClass);
+                    $newNodes[] = $targetClass;
+                }
+            }
+
             foreach ($class->associationMappings as $assoc) {
                 if ( ! ($assoc['isOwningSide'] && $assoc['type'] & ClassMetadata::TO_ONE)) {
                     continue;
