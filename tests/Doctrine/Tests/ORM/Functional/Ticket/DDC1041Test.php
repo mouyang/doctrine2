@@ -28,6 +28,21 @@ class DDC1041Test extends \Doctrine\Tests\OrmFunctionalTestCase
 
         $this->assertNull($this->_em->find('Doctrine\Tests\Models\Company\CompanyFlexContract', $id));
         $this->assertNull($this->_em->getReference('Doctrine\Tests\Models\Company\CompanyFlexContract', $id));
-        $this->assertNull($this->_em->getPartialReference('Doctrine\Tests\Models\Company\CompanyFlexContract', $id));
+    }
+
+    public function testGrabWrongSubtypeReturnEmptyPartialReference() {
+        $fix = new \Doctrine\Tests\Models\Company\CompanyFixContract();
+        $fix->setFixPrice(2000);
+
+        $this->_em->persist($fix);
+        $this->_em->flush();
+
+        $id = $fix->getId();
+
+        $wrongClass = 'Doctrine\Tests\Models\Company\CompanyFlexContract';
+        $expectedWrongClass = new $wrongClass();
+        $partialReference = $this->_em->getPartialReference($wrongClass, $id);
+        $this->assertEquals($wrongClass, get_class($partialReference));
+        $this->assertEquals($id, $partialReference->getId());
     }
 }

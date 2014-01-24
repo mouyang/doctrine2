@@ -494,7 +494,7 @@ use Doctrine\Common\Util\ClassUtils;
         $class = $this->metadataFactory->getMetadataFor(ltrim($entityName, '\\'));
 
         // Check identity map first, if its already in there just return it.
-        if (($entity = $this->unitOfWork->tryGetById($identifier, $class->rootEntityName)) !== false) {
+        if (($entity = $this->unitOfWork->tryGetById($identifier, $class->name)) !== false) {
             return ($entity instanceof $class->name) ? $entity : null;
         }
 
