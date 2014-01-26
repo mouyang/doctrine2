@@ -2522,14 +2522,8 @@ class UnitOfWork implements PropertyChangedListener
             $id = array($class->identifier[0] => $idHash);
         }
 
-        if (($class->isInheritanceTypeSingleTable() && isset($this->identityMap[$className][$idHash])) || 
-            (!$class->isInheritanceTypeSingleTable() && isset($this->identityMap[$class->rootEntityName][$idHash]))
-        ) {
-            if ($class->isInheritanceTypeSingleTable()) {
-                $entity = $this->identityMap[$className][$idHash];
-            } else if (!$class->isInheritanceTypeSingleTable()) {
-                $entity = $this->identityMap[$class->rootEntityName][$idHash];
-            }
+        if (isset($this->identityMap[$className][$idHash])) {
+            $entity = $this->identityMap[$className][$idHash];
             $oid = spl_object_hash($entity);
 
             if (
@@ -2589,11 +2583,7 @@ class UnitOfWork implements PropertyChangedListener
             $this->entityStates[$oid]       = self::STATE_MANAGED;
             $this->originalEntityData[$oid] = $data;
 
-            if ($class->isInheritanceTypeSingleTable()) {
-                $this->identityMap[$className][$idHash] = $entity;
-            } else if (!$class->isInheritanceTypeSingleTable()) {
-                $this->identityMap[$class->rootEntityName][$idHash] = $entity;
-            }
+            $this->identityMap[$className][$idHash] = $entity;
 
             if ($entity instanceof NotifyPropertyChanged) {
                 $entity->addPropertyChangedListener($this);
