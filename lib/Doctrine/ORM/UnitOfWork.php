@@ -1113,14 +1113,19 @@ class UnitOfWork implements PropertyChangedListener
 
                 $targetClass = $this->em->getClassMetadata($assoc['targetEntity']);
                 if (is_a($class->name, $targetClass->name, true)) {
-                    $this->addSubclassDependencies($targetClass, $class, $calc, $newNodes);
+                    for ($i = 0; ++$i < count($class->parentClasses); ) {
+                        $calc->addDependency(
+                            $this->em->getClassMetadata($class->parentClasses[$i]),
+                            $this->em->getClassMetadata($class->parentClasses[$i - 1])
+                        );
+                    }
                 } else {
                     if ( ! $calc->hasClass($targetClass->name)) {
                         $calc->addClass($targetClass);
                         $newNodes[] = $targetClass;
                     }
 
-                    $calc->addDependency($targetClass, $this->em->getClassMetadata($class->rootEntityName));
+                    $this->addSubclassDependencies($targetClass, $class, $calc, $newNodes);
                 }
             }
         }
@@ -1130,6 +1135,7 @@ class UnitOfWork implements PropertyChangedListener
 
     private function addSubclassDependencies($targetClass, $class, Internal\CommitOrderCalculator &$calc, array &$newNodes) {
         if (!$targetClass->subClasses) {
+            $calc->addDependency($targetClass, $class);
             return;
         }
         foreach ($targetClass->subClasses as $subClassName) {
@@ -1138,7 +1144,9 @@ class UnitOfWork implements PropertyChangedListener
                 $calc->addClass($targetSubClass);
                 $newNodes[] = $targetSubClass;
             }
+            $this->addSubclassDependencies($targetSubClass, $class, $calc, $newNodes);
             $calc->addDependency($targetClass, $targetSubClass);
+            $calc->addDependency($targetClass, $class);
         }
 
         if ($class->name !== $targetClass->name) {

@@ -30,7 +30,7 @@ class DDC599Test extends \Doctrine\Tests\OrmFunctionalTestCase
         $this->_em->flush();
         $this->_em->clear();
 
-        $item = $this->_em->find(__NAMESPACE__ . '\DDC599Item', $item->id);
+        $item = $this->_em->find(__NAMESPACE__ . '\DDC599Subitem', $item->id);
 
         $this->_em->remove($item);
         $this->_em->flush(); // Should not fail
